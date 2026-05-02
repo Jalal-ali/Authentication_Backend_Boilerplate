@@ -11,9 +11,10 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-connectDB();
 
+connectDB();
 app.use("/api/v1", authRoutes );
-app.listen(3000, () => {
+app.listen(3000, ( req,res) => {
   console.log("Server running on port 3000");
+
 });
