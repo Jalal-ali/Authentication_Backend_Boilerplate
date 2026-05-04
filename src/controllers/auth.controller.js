@@ -57,7 +57,7 @@ const getSingleUser = async (req, res) => {
         })
     }
     res.status(200).json({
-        users: user
+        user: user
     })
 }
 
