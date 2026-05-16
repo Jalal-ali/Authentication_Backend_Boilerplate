@@ -1,6 +1,7 @@
 import users from '../models/auth.model.js'
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import generateToken from '../utils/generateToken.js';
 
 const register = async (req, res) => {
     const { email, password } = req.body;
@@ -33,8 +34,11 @@ const getUsers = async (req, res) => {
             message: "No users found!"
         })
     }
+    const header = req.headers ;
     res.status(200).json({
-        users: user
+        users: user,
+        header
+
     })
 }
 
@@ -104,11 +108,30 @@ const login = async (req, res) => {
             message: "Invalid credentials."
         });
     }
+    const token = generateToken(user.id);
 
     return res.status(200).json({
-        message: "Logged in successfully!"
+        message: "Logged in successfully!",
+        token
     });
 };
 
+const updateUser = async (req, res) => {
+    const { email, password } = req.body;
+    const isUser = await users.findOne({email});
+    if (!isUser) {
+        return res.status(404).json({
+            message: "No user Found"
+        });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await users.findOneAndUpdate({ email }, { password : hashedPassword });
 
-export { register, getUsers, deleteUser, getSingleUser, login }
+    res.status(200).json({
+        message: "Updated successfully!",
+        user
+    })
+}
+
+
+export { register, getUsers, deleteUser, getSingleUser, login, updateUser }
