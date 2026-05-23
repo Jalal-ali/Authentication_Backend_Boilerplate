@@ -34,10 +34,15 @@ const getUsers = async (req, res) => {
             message: "No users found!"
         })
     }
-    const header = req.headers ;
+    // authenticated user 
+    const authUser = {
+        id: req.user.id,
+        email: req.user.email
+    };
+
     res.status(200).json({
         users: user,
-        header
+        AuthorizedUser: authUser
 
     })
 }
@@ -108,7 +113,7 @@ const login = async (req, res) => {
             message: "Invalid credentials."
         });
     }
-    const token = generateToken(user.id);
+    const token = generateToken(user.id, user.email);
 
     return res.status(200).json({
         message: "Logged in successfully!",
@@ -117,19 +122,29 @@ const login = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { email, password } = req.body;
-    const isUser = await users.findOne({email});
+    const { email, password, currentPass } = req.body;
+    if (!email || !password || !currentPass) {
+        return res.status(400).json({
+            message: "Email and password are required."
+        });
+    }
+    const isUser = await users.findOne({ email });
     if (!isUser) {
         return res.status(404).json({
             message: "No user Found"
         });
     }
+    const isMatch = await bcrypt.compare(currentPass, isUser.password);
+    if (!isMatch) {
+        return res.status(400).json({
+            message: "Invalid email or password."
+        });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await users.findOneAndUpdate({ email }, { password : hashedPassword });
+    const user = await users.findOneAndUpdate({ email }, { password: hashedPassword });
 
     res.status(200).json({
-        message: "Updated successfully!",
-        user
+        message: `The Password for ${user.email} has been Updated Successfully!`,
     })
 }
 
