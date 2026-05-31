@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import generateToken from '../utils/generateToken.js';
 
 const register = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
     if (!email || !password) {
         return res.status(400).json({
             message: "Email and Password are required !"
@@ -19,7 +19,8 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await users.create({
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role
     });
     res.status(201).json({
         message: "User registered successfully !",
@@ -37,8 +38,14 @@ const getUsers = async (req, res) => {
     // authenticated user 
     const authUser = {
         id: req.user.id,
-        email: req.user.email
+        email: req.user.email,
+        role : req.user.role
     };
+    if(req.user.role != "admin"){
+        return res.status(401).json({
+            message : "Only admins can view all users."
+        })
+    }
 
     res.status(200).json({
         users: user,
@@ -113,7 +120,7 @@ const login = async (req, res) => {
             message: "Invalid credentials."
         });
     }
-    const token = generateToken(user.id, user.email);
+    const token = generateToken(user.id, user.email, user.role);
 
     return res.status(200).json({
         message: "Logged in successfully!",
