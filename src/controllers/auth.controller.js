@@ -29,12 +29,7 @@ const register = async (req, res) => {
 }
 
 const getUsers = async (req, res) => {
-    const user = await users.find()
-    if (!user || user.length <= 0) {
-        return res.status(400).json({
-            message: "No users found!"
-        })
-    }
+    
     // authenticated user 
     const authUser = {
         id: req.user.id,
@@ -43,7 +38,15 @@ const getUsers = async (req, res) => {
     };
     if(req.user.role != "admin"){
         return res.status(401).json({
-            message : "Only admins can view all users."
+            message : "Only admins can view all users.",
+            role : authUser.role,
+            email : authUser.email 
+        })
+    }
+    const user = await users.find()
+    if (!user || user.length <= 0) {
+        return res.status(400).json({
+            message: "No users found!"
         })
     }
 
