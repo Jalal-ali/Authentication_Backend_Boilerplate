@@ -2,9 +2,11 @@ import users from '../models/auth.model.js'
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import generateToken from '../utils/generateToken.js';
+import crypto from "crypto";
+
 
 const register = async (req, res) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, fullName } = req.body;
     if (!email || !password) {
         return res.status(400).json({
             message: "Email and Password are required !"
@@ -20,7 +22,8 @@ const register = async (req, res) => {
     const user = await users.create({
         email,
         password: hashedPassword,
-        role
+        role,
+        fullName
     });
     res.status(201).json({
         message: "User registered successfully !",
@@ -29,18 +32,18 @@ const register = async (req, res) => {
 }
 
 const getUsers = async (req, res) => {
-    
+
     // authenticated user 
     const authUser = {
         id: req.user.id,
         email: req.user.email,
-        role : req.user.role
+        role: req.user.role
     };
-    if(req.user.role != "admin"){
+    if (req.user.role != "admin") {
         return res.status(401).json({
-            message : "Only admins can view all users.",
-            role : authUser.role,
-            email : authUser.email 
+            message: "Only admins can view all users.",
+            role: authUser.role,
+            email: authUser.email
         })
     }
     const user = await users.find()
@@ -58,18 +61,26 @@ const getUsers = async (req, res) => {
 }
 
 const getSingleUser = async (req, res) => {
-    const { id } = req.params;
-    if (!id) {
-        return res.status(400).json({
-            message: "Id is required !"
-        })
-    }
+    // authenticated user 
+    const authUser = {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role
+    };
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "Not a valid ID" });
-    }
+    // from id 
+    // const { id } = req.params;
+    // if (!id) {
+    //     return res.status(400).json({
+    //         message: "Id is required !"
+    //     })
+    // }
 
-    const user = await users.findById(id)
+    // if (!mongoose.Types.ObjectId.isValid(id)) {
+    //     return res.status(400).json({ error: "Not a valid ID" });
+    // }
+
+    const user = await users.findById(authUser.id)
     if (!user) {
         return res.status(400).json({
             message: "No user found!"
@@ -90,6 +101,13 @@ const deleteUser = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Not a valid ID" });
+    }
+
+    const isExist = await users.findById(id);
+    if (!isExist) {
+        return res.status(404).json({
+            message: "User not Found!"
+        })
     }
 
     const user = await users.findByIdAndDelete(id)
@@ -158,5 +176,28 @@ const updateUser = async (req, res) => {
     })
 }
 
+// forgot password 
+const forgotPassword = (req, res) => {
+    const { email } = req.body;
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
-export { register, getUsers, deleteUser, getSingleUser, login, updateUser }
+    res.json({
+        message: "Password reset link sent to your email!",
+        resetToken
+    })
+
+}
+// reset password 
+const resetPassword = (req, res) => {
+    const { email } = req.body;
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    res.json({
+        message: "Password reset link sent to your email!",
+        resetToken
+    })
+
+}
+
+
+export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword }
