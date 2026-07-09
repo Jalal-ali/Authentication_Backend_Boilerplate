@@ -3,6 +3,15 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import generateToken from '../utils/generateToken.js';
 import crypto from "crypto";
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 
 const register = async (req, res) => {
@@ -177,9 +186,41 @@ const updateUser = async (req, res) => {
 }
 
 // forgot password 
-const forgotPassword = (req, res) => {
-    const { email } = req.body;
+const forgotPassword = async (req, res) => {
+    const { email, clientURL } = req.body;
+    const user = await users.findOne({ email });
+    if (!user) {
+        return res.status(404).json({
+            message: "User not found!"
+        })
+    }
+    // const allowedOrigins = [
+    //     "http://localhost:5173",
+    //     "https://myapp.com",
+    // ];
+
+    // if (!allowedOrigins.includes(clientURL)) {
+    //     return res.status(400).json({
+    //         message: "Invalid client URL",
+    //     });
+    // }
     const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const resetLink = `${clientURL}/reset-password/${resetToken}`;
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Reset Your Password",
+        html: `
+        <h2>Password Reset</h2>
+        <p>You requested a password reset.</p>
+        <a href="${resetLink}">Reset Password</a>
+        <p>This link expires in 15 minutes.</p>`,
+    });
 
     res.json({
         message: "Password reset link sent to your email!",
@@ -200,4 +241,4 @@ const resetPassword = (req, res) => {
 }
 
 
-export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword }
+export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword, forgotPassword }
