@@ -218,7 +218,7 @@ const forgotPassword = async (req, res) => {
         html: `
         <h2>Password Reset</h2>
         <p>You requested a password reset.</p>
-        <a href="${resetLink}">Reset Password</a>
+        <a href="${resetLink}">Click here to Reset your Password</a>
         <p>This link expires in 15 minutes.</p>`,
     });
 
@@ -229,14 +229,28 @@ const forgotPassword = async (req, res) => {
 
 }
 // reset password 
-const resetPassword = (req, res) => {
-    const { email } = req.body;
-    const resetToken = crypto.randomBytes(32).toString("hex");
-
-    res.json({
-        message: "Password reset link sent to your email!",
-        resetToken
+const resetPassword = async (req, res) => {
+    const { password, token } = req.body;
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await users.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
     })
+    if (!user) {
+        return res.status(400).json({
+            message: "Invalid or expired reset token."
+        });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    res.status(200).json({
+        message: "Password updated Successfully!.",
+        user
+    })
+
 
 }
 

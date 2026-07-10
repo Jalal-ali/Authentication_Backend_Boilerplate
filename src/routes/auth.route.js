@@ -9,7 +9,7 @@ routes.get("/users", auth, getUsers);
 routes.get("/user/", auth, getSingleUser);
 routes.post("/login", login);
 routes.put("/update", updateUser);
-routes.get("/reset-password", resetPassword);
+routes.post("/reset-password", resetPassword);
 routes.post("/forgot-password", forgotPassword);
 routes.delete("/delete/:id", deleteUser);
 
