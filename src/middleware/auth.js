@@ -4,7 +4,6 @@ dotenv.config();
 
 const auth = (req, res, next) => {
     try {
-        console.log("Authorization Header:", req.headers.authorization);
         const authHeader = req.headers.authorization;
         if (!authHeader) {
             return res.status(401).json({

@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt';
 import generateToken from '../utils/generateToken.js';
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { log } from 'console';
+import auth from '../middleware/auth.js';
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -74,7 +76,8 @@ const getSingleUser = async (req, res) => {
     const authUser = {
         id: req.user.id,
         email: req.user.email,
-        role: req.user.role
+        role: req.user.role,
+        fullName: req.user.fullName,
     };
 
     // from id 
@@ -154,34 +157,39 @@ const login = async (req, res) => {
 
     return res.status(200).json({
         message: "Logged in successfully!",
-        token
+        token, user
     });
 };
 
 const updateUser = async (req, res) => {
-    const { email, password, currentPass } = req.body;
-    if (!email || !password || !currentPass) {
+    const {newPassword, currentPass } = req.body;
+    const authEmail = req.user.email ;
+    console.log(authEmail);
+    
+    
+    if (!newPassword || !currentPass) {
         return res.status(400).json({
-            message: "Email and password are required."
+            message: "Password is required."
         });
     }
-    const isUser = await users.findOne({ email });
+    const isUser = await users.findOne({ email : authEmail });
     if (!isUser) {
         return res.status(404).json({
             message: "No user Found"
         });
     }
+    console.log(isUser);
     const isMatch = await bcrypt.compare(currentPass, isUser.password);
     if (!isMatch) {
         return res.status(400).json({
-            message: "Invalid email or password."
+            message: "Invalid Password."
         });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await users.findOneAndUpdate({ email }, { password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const user = await users.findOneAndUpdate({email : isUser.email} , { password: hashedPassword });
 
     res.status(200).json({
-        message: `The Password for ${user.email} has been Updated Successfully!`,
+        message: `The Password for ${isUser.email} has been Updated Successfully!`,
     })
 }
 

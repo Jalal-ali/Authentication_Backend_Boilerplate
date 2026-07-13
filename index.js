@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const port = process.env.PORT ;
+const HOST = '0.0.0.0';
 const app = express();
 app.use(express.json())
 app.use(cors());
@@ -16,7 +17,6 @@ app.get("/", (req, res) => {
 
 connectDB();
 app.use("/api/v1", authRoutes );
-app.listen(port, (req, res) => {
+app.listen(port, HOST, (req, res) => {
   console.log(`Server running on port ${port}`);
-
 });
