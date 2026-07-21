@@ -21,6 +21,16 @@ const register = async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({
             message: "Email and Password are required !"
+        });
+    }
+    if (!fullName) {
+        return res.status(400).json({
+            message: "Full Name is required !"
+        })
+    }
+    if (!role) {
+        return res.status(400).json({
+            message: "Role is required !"
         })
     }
     const existingUser = await users.findOne({ email: email })
