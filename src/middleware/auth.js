@@ -11,7 +11,7 @@ const auth = (req, res, next) => {
             });
         }
         const token = authHeader.split(" ")[1];
-        console.log("Extracted Token:", token);
+        // console.log("Extracted Token:", token);
         if (!token) {
             return res.status(401).json({
                 message: "Invalid token format"

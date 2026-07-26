@@ -5,18 +5,21 @@ import connectDB from "./src/db/index.js";
 import dotenv from 'dotenv';
 dotenv.config();
 
-const port = process.env.PORT ;
+const port = process.env.PORT;
 const HOST = '0.0.0.0';
 const app = express();
 app.use(express.json())
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
 connectDB();
-app.use("/api/v1", authRoutes );
+app.use("/api/v1", authRoutes);
 app.listen(port, HOST, (req, res) => {
   console.log(`Server running on port ${port}`);
 });

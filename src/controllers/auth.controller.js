@@ -1,7 +1,7 @@
 import users from '../models/auth.model.js'
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import generateToken from '../utils/generateToken.js';
+import { generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { log } from 'console';
@@ -163,8 +163,16 @@ const login = async (req, res) => {
             message: "Invalid credentials."
         });
     }
-    const token = generateToken(user.id, user.email, user.role);
+    const token = generateAccessToken(user.id, user.email, user.role);
+    // const token = generateRefreshToken(user.id, user.email, user.role);
+    const refreshToken = generateRefreshToken(user._id);
 
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
     return res.status(200).json({
         message: "Logged in successfully!",
         token, user
@@ -172,17 +180,17 @@ const login = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const {newPassword, currentPass } = req.body;
-    const authEmail = req.user.email ;
+    const { newPassword, currentPass } = req.body;
+    const authEmail = req.user.email;
     console.log(authEmail);
-    
-    
+
+
     if (!newPassword || !currentPass) {
         return res.status(400).json({
             message: "Password is required."
         });
     }
-    const isUser = await users.findOne({ email : authEmail });
+    const isUser = await users.findOne({ email: authEmail });
     if (!isUser) {
         return res.status(404).json({
             message: "No user Found"
@@ -196,7 +204,7 @@ const updateUser = async (req, res) => {
         });
     }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const user = await users.findOneAndUpdate({email : isUser.email} , { password: hashedPassword });
+    const user = await users.findOneAndUpdate({ email: isUser.email }, { password: hashedPassword });
 
     res.status(200).json({
         message: `The Password for ${isUser.email} has been Updated Successfully!`,
