@@ -1,12 +1,13 @@
 import users from '../models/auth.model.js'
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/generateToken.js';
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { log } from 'console';
 import auth from '../middleware/auth.js';
 
+// nodemailer transporter 
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -51,6 +52,45 @@ const register = async (req, res) => {
         user
     });
 }
+const login = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Email and password are required."
+        });
+    }
+
+    const user = await users.findOne({ email });
+
+    if (!user) {
+        return res.status(404).json({
+            message: `User not found with ${email}`
+        });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+        return res.status(400).json({
+            message: "Invalid credentials."
+        });
+    }
+    const token = generateAccessToken(user.id, user.email, user.role);
+    const refreshToken = generateRefreshToken(user.id, user.email, user.role);
+    // const refreshToken = generateRefreshToken(user._id);
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({
+        message: "Logged in successfully!",
+        token, user
+    });
+};
 
 const getUsers = async (req, res) => {
 
@@ -138,46 +178,6 @@ const deleteUser = async (req, res) => {
         user
     })
 }
-
-const login = async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({
-            message: "Email and password are required."
-        });
-    }
-
-    const user = await users.findOne({ email });
-
-    if (!user) {
-        return res.status(404).json({
-            message: `User not found with ${email}`
-        });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-        return res.status(400).json({
-            message: "Invalid credentials."
-        });
-    }
-    const token = generateAccessToken(user.id, user.email, user.role);
-    // const token = generateRefreshToken(user.id, user.email, user.role);
-    const refreshToken = generateRefreshToken(user._id);
-
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-    return res.status(200).json({
-        message: "Logged in successfully!",
-        token, user
-    });
-};
 
 const updateUser = async (req, res) => {
     const { newPassword, currentPass } = req.body;
@@ -280,5 +280,32 @@ const resetPassword = async (req, res) => {
 
 }
 
+// refresh token 
+const refresh = async (req, res) => {    
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(401).json({
+            message: "Refresh Token not found !"
+        });
+    }
+    try {
+        const decoded = verifyRefreshToken(refreshToken);
+        console.log("Decoded ===> ", decoded);
+        
+        const token = generateAccessToken(decoded.id, decoded.email, decoded.role);
+        res.status(200).json({
+            message : "refreshed token successfully",
+            userDetails : decoded,
+            token , 
+        });
+    } catch (err) {
+        return res.status(401).json({
+            message: "Unauthorized",
+            error : err
+        })
+    }
+}
 
-export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword, forgotPassword }
+
+
+export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword, forgotPassword, refresh }

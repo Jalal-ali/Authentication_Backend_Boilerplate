@@ -3,11 +3,13 @@ import cors from "cors";
 import authRoutes from "./src/routes/auth.route.js"
 import connectDB from "./src/db/index.js";
 import dotenv from 'dotenv';
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const port = process.env.PORT;
 const HOST = '0.0.0.0';
 const app = express();
+app.use(cookieParser())
 app.use(express.json())
 app.use(cors({
   origin: "http://localhost:5173",

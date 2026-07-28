@@ -20,12 +20,25 @@ const auth = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.ACCESS_JWT_SECRET);
         req.user = decoded;
         next();
-    } catch (error) {
-        console.log("JWT Error:", error);
+    } catch (err) {
+        console.log("JWT Error:", err);
+         if (err.name === "TokenExpiredError") {
         return res.status(401).json({
-            message: "Unauthorized",
-            error: error.message
+            code: "TOKEN_EXPIRED",
+            message: "Access token expired"
         });
+    }
+
+    if (err.name === "JsonWebTokenError") {
+        return res.status(401).json({
+            code: "TOKEN_INVALID",
+            message: "Invalid access token"
+        });
+    }
+
+    return res.status(500).json({
+        message: "Internal server error"
+    });
     }
 }
 
