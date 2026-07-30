@@ -15,8 +15,7 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
-
-
+// register
 const register = async (req, res) => {
     const { email, password, role, fullName } = req.body;
     if (!email || !password) {
@@ -52,6 +51,7 @@ const register = async (req, res) => {
         user
     });
 }
+// login
 const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -91,7 +91,7 @@ const login = async (req, res) => {
         token, user
     });
 };
-
+// get all Users
 const getUsers = async (req, res) => {
 
     // authenticated user 
@@ -120,7 +120,7 @@ const getUsers = async (req, res) => {
 
     })
 }
-
+// get single user
 const getSingleUser = async (req, res) => {
     // authenticated user 
     const authUser = {
@@ -152,7 +152,7 @@ const getSingleUser = async (req, res) => {
         user: user
     })
 }
-
+// delete a user
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     if (!id) {
@@ -178,7 +178,7 @@ const deleteUser = async (req, res) => {
         user
     })
 }
-
+// update user password 
 const updateUser = async (req, res) => {
     const { newPassword, currentPass } = req.body;
     const authEmail = req.user.email;
@@ -210,7 +210,6 @@ const updateUser = async (req, res) => {
         message: `The Password for ${isUser.email} has been Updated Successfully!`,
     })
 }
-
 // forgot password 
 const forgotPassword = async (req, res) => {
     const { email, clientURL } = req.body;
@@ -279,9 +278,8 @@ const resetPassword = async (req, res) => {
 
 
 }
-
 // refresh token 
-const refresh = async (req, res) => {    
+const refresh = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
         return res.status(401).json({
@@ -291,21 +289,19 @@ const refresh = async (req, res) => {
     try {
         const decoded = verifyRefreshToken(refreshToken);
         console.log("Decoded ===> ", decoded);
-        
+
         const token = generateAccessToken(decoded.id, decoded.email, decoded.role);
         res.status(200).json({
-            message : "refreshed token successfully",
-            userDetails : decoded,
-            token , 
+            message: "refreshed token successfully",
+            userDetails: decoded,
+            token,
         });
     } catch (err) {
         return res.status(401).json({
             message: "Unauthorized",
-            error : err
+            error: err
         })
     }
 }
-
-
 
 export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword, forgotPassword, refresh }

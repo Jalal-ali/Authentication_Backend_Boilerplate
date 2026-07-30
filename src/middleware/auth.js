@@ -11,7 +11,6 @@ const auth = (req, res, next) => {
             });
         }
         const token = authHeader.split(" ")[1];
-        // console.log("Extracted Token:", token);
         if (!token) {
             return res.status(401).json({
                 message: "Invalid token format"
@@ -22,24 +21,24 @@ const auth = (req, res, next) => {
         next();
     } catch (err) {
         console.log("JWT Error:", err);
-         if (err.name === "TokenExpiredError") {
-        return res.status(401).json({
-            code: "TOKEN_EXPIRED",
-            message: "Access token expired"
-        });
-    }
+        if (err.name === "TokenExpiredError") {
+            return res.status(401).json({
+                code: "TOKEN_EXPIRED",
+                message: "Access token expired"
+            });
+        }
 
-    if (err.name === "JsonWebTokenError") {
-        return res.status(401).json({
-            code: "TOKEN_INVALID",
-            message: "Invalid access token"
-        });
-    }
+        if (err.name === "JsonWebTokenError") {
+            return res.status(401).json({
+                code: "TOKEN_INVALID",
+                message: "Invalid access token"
+            });
+        }
 
-    return res.status(500).json({
-        message: "Internal server error"
-    });
+        return res.status(500).json({
+            message: "Internal server error"
+        });
     }
 }
 
-export default auth ;
+export default auth;
