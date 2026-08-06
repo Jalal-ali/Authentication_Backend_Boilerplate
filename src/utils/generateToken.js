@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const generateAccessToken = (id, email, role) => {
-    return jwt.sign({ id, email, role }, process.env.ACCESS_JWT_SECRET, { expiresIn: "10s" })
+    return jwt.sign({ id, email, role }, process.env.ACCESS_JWT_SECRET, { expiresIn: "15m" })
 }
 const generateRefreshToken = (id, email, role) => {
     return jwt.sign({ id, email, role }, process.env.REFRESH_JWT_SECRET, { expiresIn: "20d" })
@@ -14,7 +14,7 @@ const verifyRefreshToken = (refreshToken) => {
         return decoded;
     }
     catch (err) {
-        throw err.message?.response;
+        throw err;
     }
 }
 export { generateAccessToken, generateRefreshToken, verifyRefreshToken }
