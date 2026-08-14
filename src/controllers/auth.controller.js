@@ -92,8 +92,35 @@ const login = async (req, res) => {
     });
 };
 // get all Users
-const getUsers = async (req, res) => {
+// const getUsers = async (req, res) => {
 
+//     // authenticated user 
+//     const authUser = {
+//         id: req.user.id,
+//         email: req.user.email,
+//         role: req.user.role
+//     };
+//     if (req.user.role != "admin") {
+//         return res.status(401).json({
+//             message: "Only admins can view all users.",
+//             role: authUser.role,
+//             email: authUser.email
+//         })
+//     }
+//     const user = await users.find()
+//     if (!user || user.length <= 0) {
+//         return res.status(400).json({
+//             message: "No users found!"
+//         })
+//     }
+
+//     res.status(200).json({
+//         users: user,
+//         AuthorizedUser: authUser
+
+//     })
+// }
+const getUsers = async (req, res) => {
     // authenticated user 
     const authUser = {
         id: req.user.id,
@@ -107,18 +134,28 @@ const getUsers = async (req, res) => {
             email: authUser.email
         })
     }
-    const user = await users.find()
-    if (!user || user.length <= 0) {
+    const totalUsers = await users.countDocuments();
+    const page = Number(req.query.page) // || 1;
+    const limit = Number(req.query.limit) // || 10;
+    const skip = Number((page - 1) * limit);
+    const allUsers = await users.find().skip(skip).limit(limit);
+    const totalPages = Math.ceil((totalUsers / limit))
+    if (!Number.isInteger(page) || page < 1) {
         return res.status(400).json({
-            message: "No users found!"
-        })
+            message: "Invalid page number"
+        });
     }
 
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        return res.status(400).json({
+            message: "Invalid limit"
+        });
+    }
     res.status(200).json({
-        users: user,
-        AuthorizedUser: authUser
-
+        users: allUsers,
+        totalUsers, totalPages
     })
+
 }
 // get single user
 const getSingleUser = async (req, res) => {
@@ -304,4 +341,9 @@ const refresh = async (req, res) => {
     }
 }
 
-export { register, getUsers, deleteUser, getSingleUser, login, updateUser, resetPassword, forgotPassword, refresh }
+
+
+export {
+    register, getUsers, deleteUser, getSingleUser,
+    login, updateUser, resetPassword, forgotPassword, refresh,
+}
