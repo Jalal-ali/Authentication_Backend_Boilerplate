@@ -19,6 +19,12 @@ app.use(cors({
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "API is running"
+  });
+});
 
 connectDB();
 app.use("/api/v1", authRoutes);
