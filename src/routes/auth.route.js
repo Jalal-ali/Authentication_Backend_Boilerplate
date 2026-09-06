@@ -17,6 +17,9 @@ routes.post("/reset-password", resetPassword);
 routes.post("/forgot-password", forgotPassword);
 routes.delete("/delete/:id",auth, deleteUser);
 routes.post("/refresh", refresh);
+routes.get("/refresh", (req,res) => {
+     res.json({name:"jalal", age : 21});
+});
 // routes.get("/check", checkQue);
 
 export default routes;
