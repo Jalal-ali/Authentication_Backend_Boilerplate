@@ -15,7 +15,7 @@ routes.get("/user/", auth, getSingleUser);
 routes.put("/update-password", auth, updateUser);
 routes.post("/reset-password", resetPassword);
 routes.post("/forgot-password", forgotPassword);
-routes.delete("/delete/:id", deleteUser);
+routes.delete("/delete/:id",auth, deleteUser);
 routes.post("/refresh", refresh);
 // routes.get("/check", checkQue);
 

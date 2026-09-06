@@ -191,6 +191,13 @@ const getSingleUser = async (req, res) => {
 }
 // delete a user
 const deleteUser = async (req, res) => {
+    const authUser = {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+        fullName: req.user.fullName,
+    }
+    
     const { id } = req.params;
     if (!id) {
         return res.status(400).json({
@@ -202,11 +209,18 @@ const deleteUser = async (req, res) => {
         return res.status(400).json({ error: "Not a valid ID" });
     }
 
-    const isExist = await users.findById(id);
-    if (!isExist) {
+    const calledUser = await users.findById(id);
+    if (!calledUser) {
         return res.status(404).json({
             message: "User not Found!"
         })
+    }
+    // console.log(calledUser._id.toString() == authUser.id.toString());
+
+    if (calledUser._id.toString() != authUser.id.toString() && authUser.role != "admin") {
+        return res.status(403).json({
+            message: "You are not authorized to delete this user."
+        });
     }
 
     const user = await users.findByIdAndDelete(id)
@@ -286,7 +300,7 @@ const forgotPassword = async (req, res) => {
 
     res.json({
         message: "Password reset link sent to your email!",
-        resetToken
+        // resetToken
     })
 
 }
