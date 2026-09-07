@@ -28,11 +28,11 @@ const register = async (req, res) => {
             message: "Full Name is required !"
         })
     }
-    if (!role) {
-        return res.status(400).json({
-            message: "Role is required !"
-        })
-    }
+    // if (!role) {
+    //     return res.status(400).json({
+    //         message: "Role is required !"
+    //     })
+    // }
     const existingUser = await users.findOne({ email: email })
     if (existingUser) {
         return res.status(409).json({
